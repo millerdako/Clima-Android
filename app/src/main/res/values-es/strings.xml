@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clima</string>
+    <string name="default_location">" Obteniendo ubicación"</string>
+    <string name="default_temp">NA</string>
+    <string name="change_city_description">" Haga clic aquí para cambiar de ciudad"</string>
+    <string name="weather_description">" Este es el símbolo del clima"</string>
+    <string name="back_button_description">" Descartar cambiar pantalla de ciudad"</string>
+    <string name="get_weather">Cambiar ciudad</string>
+    <string name="default_query">Ingrese el nombre de la ciudad</string>
+</resources>

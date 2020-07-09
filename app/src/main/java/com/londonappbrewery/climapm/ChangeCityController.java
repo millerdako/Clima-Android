@@ -35,6 +35,7 @@ public class ChangeCityController extends AppCompatActivity {
                 newCityIntent.putExtra("City", newCity);
                 startActivity(newCityIntent);
 
+
                 return false;
             }
         });

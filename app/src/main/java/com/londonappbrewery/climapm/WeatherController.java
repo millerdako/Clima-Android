@@ -24,6 +24,8 @@ import com.loopj.android.http.RequestParams;
 
 import org.json.JSONObject;
 
+import java.text.Normalizer;
+
 import cz.msebera.android.httpclient.Header;
 
 
@@ -39,8 +41,12 @@ public class WeatherController extends AppCompatActivity {
     // Distance between location updates (1000m or 1km)
     final float MIN_DISTANCE = 1000;
 
+    private String cityActually;
+    private boolean cityChange;
+
     // TODO: Set LOCATION_PROVIDER here:
-    String LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
+    //String LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
+    String LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
 
 
     // Member Variables:
@@ -60,6 +66,8 @@ public class WeatherController extends AppCompatActivity {
 
         // Linking the elements in the layout to Java code
         mCityLabel = (TextView) findViewById(R.id.locationTV);
+        cityActually = mCityLabel.getText().toString()+"Default";
+        cityChange = true;
         mWeatherImage = (ImageView) findViewById(R.id.weatherSymbolIV);
         mTemperatureLabel = (TextView) findViewById(R.id.tempTV);
         ImageButton changeCityButton = (ImageButton) findViewById(R.id.changeCityButton);
@@ -86,8 +94,9 @@ public class WeatherController extends AppCompatActivity {
         Intent myIntent = getIntent();
         String city = myIntent.getStringExtra("City");
 
-        if (city != null){
+        if (city != null && cityChange){
             getWeatherForNewCity(city);
+            cityChange = false;
         }else{
             Log.d("Clima", "Gettin weather for current location");
             getWeatherForCurrentLocation();
@@ -100,8 +109,11 @@ public class WeatherController extends AppCompatActivity {
         RequestParams params = new RequestParams();
 
         params.put("q", city);
+
         params.put("appid", APP_ID);
-        letsDoSomeNetworking(params);
+        if(!cityActually.equals(limpiarAcentos(city))){
+            letsDoSomeNetworking(params);
+        }
     }
 
 
@@ -125,7 +137,10 @@ public class WeatherController extends AppCompatActivity {
                 params.put("lat", Latitude);
                 params.put("lon", Longitude);
                 params.put("appid", APP_ID);
-                letsDoSomeNetworking(params);
+
+                if(!cityActually.equals(limpiarAcentos(mCityLabel.getText().toString()))){
+                    letsDoSomeNetworking(params);
+                }
 
             }
 
@@ -185,6 +200,7 @@ public class WeatherController extends AppCompatActivity {
                 Log.d("Clima", "Success! JSON: "+response.toString());
 
                 WeatherDataModel weatherDataModel = WeatherDataModel.fromJson(response);
+
                 updateUI(weatherDataModel);
             }
 
@@ -203,6 +219,7 @@ public class WeatherController extends AppCompatActivity {
     public void updateUI(WeatherDataModel weather){
         mTemperatureLabel.setText(weather.getTemperature());
         mCityLabel.setText(weather.getCity());
+        cityActually = limpiarAcentos(weather.getCity());
 
         int resourceID = getResources().getIdentifier(weather.getIconName(), "drawable", getPackageName());
         mWeatherImage.setImageResource(resourceID);
@@ -217,6 +234,21 @@ public class WeatherController extends AppCompatActivity {
         super.onPause();
 
         if(mLocationManager != null) mLocationManager.removeUpdates(mLocationListener);
+    }
+
+    protected static String limpiarAcentos(String cadena) {
+        String limpio =null;
+        if (cadena !=null) {
+            String valor = cadena;
+            valor = valor.toUpperCase();
+            // Normalizar texto para eliminar acentos, dieresis, cedillas y tildes
+            limpio = Normalizer.normalize(valor, Normalizer.Form.NFD);
+            // Quitar caracteres no ASCII excepto la enie, interrogacion que abre, exclamacion que abre, grados, U con dieresis.
+            limpio = limpio.replaceAll("[^\\p{ASCII}(N\u0303)(n\u0303)(\u00A1)(\u00BF)(\u00B0)(U\u0308)(u\u0308)]", "");
+            // Regresar a la forma compuesta, para poder comparar la enie con la tabla de valores
+            limpio = Normalizer.normalize(limpio, Normalizer.Form.NFC);
+        }
+        return limpio;
     }
 
 
